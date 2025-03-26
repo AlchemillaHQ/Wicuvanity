@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) 2024 shtrophic <christoph at liebender dot dev>
+ * Copyright (c) 2024-2025 shtrophic <christoph at liebender dot dev>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -257,7 +257,7 @@ __device__ char* custrcasestr(const char* haystack, const char* needle) {
     return ((char*)haystack);
 }
 
-__global__ void generator(const char* _needle, size_t needlesize, int in) {
+__global__ void generator(const char* _needle, size_t needlesize, int in, unsigned long long seed) {
     int tid = threadIdx.x, idx = blockIdx.x * blockDim.x + tid;
 
     extern __shared__ char needle[];
@@ -271,7 +271,7 @@ __global__ void generator(const char* _needle, size_t needlesize, int in) {
     __syncthreads();
 
     curandState_t state;
-    curand_init(0, idx, 0, &state);
+    curand_init(seed, idx, 0, &state);
 
     u8 privkey[32], pubkey[32];
     char privkey_b64[45], pubkey_b64[45];
@@ -339,7 +339,10 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    generator<<<gridsize, blocksize, needlesize + 1>>>(pndl_dev, needlesize, in);
+    unsigned long long seed;
+    arc4random_buf(&seed, sizeof(seed));
+
+    generator<<<gridsize, blocksize, needlesize + 1>>>(pndl_dev, needlesize, in, seed);
     cudaDeviceSynchronize();
 
     cudaHostUnregister(pndl_host);
