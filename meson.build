@@ -1,4 +1,4 @@
-project('wicuvanity', 'cuda', version: '1.1', license: 'MIT')
+project('wicuvanity', 'cuda', version: '1.2', license: 'MIT')
 
 executable(
     meson.project_name(),
